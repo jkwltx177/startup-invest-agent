@@ -1,55 +1,53 @@
+from typing import List
 from langchain_openai import ChatOpenAI
 from src.graph.state import GraphState
 from src.schema.models import StartupProfile
 from src.tools.retriever import SemiconductorRetriever
-import json
+from pydantic import BaseModel, Field
+
+# 여러 스타트업을 한 번에 받기 위한 래퍼 클래스
+class StartupList(BaseModel):
+    candidates: List[StartupProfile] = Field(description="List of identified semiconductor startups")
 
 class DiscoveryAgent:
     def __init__(self, model_name="gpt-4o"):
-        self.llm = ChatOpenAI(model=model_name)
+        # Structured Output을 위해 llm 설정
+        self.llm = ChatOpenAI(model=model_name, temperature=0)
+        self.structured_llm = self.llm.with_structured_output(StartupList)
         self.retriever = SemiconductorRetriever()
 
     def __call__(self, state: GraphState):
-        """
-        Discovery Agent: Search for startups using RAG.
-        Returns candidates to be added to the shared state.
-        """
-        print("--- DISCOVERY AGENT: RAG SEARCH ---")
+        print("--- DISCOVERY AGENT: EXTRACTING FROM REAL PDF ---")
         question = state["question"]
         
-        # 1. RAG 기반 기업 검색 (리포트, 기사 활용)
-        context = self.retriever.get_context(f"Startups related to: {question}")
+        # 1. RAG 검색 (data/ 폴더의 삼성, SK, 산업 리포트 등 활용)
+        context = self.retriever.get_context(f"Semiconductor companies and startups mentioned in: {question}", k=10)
         
-        # 2. LLM을 통한 엔티티 추출 (기업명, 기술 분야, 투자 단계)
+        # 2. LLM이 컨텍스트에서 실제 기업 정보 추출
         prompt = f"""
-        Based on the following context, identify promising semiconductor AI startups.
-        Context: {context}
+        You are a semiconductor investment analyst. Based on the provided context, 
+        identify and profile the companies or startups that match the user's interest.
         
-        User Query: {question}
+        Context:
+        {context}
         
-        Return the result as a list of JSON objects with keys: 
-        "name", "domain", "investment_stage", "description", "relevance_score".
+        User Query:
+        {question}
+        
+        If specific startups aren't found, look for company names mentioned in the industry trend reports.
+        Assign a relevance_score (0-1) based on how well they match the 'semiconductor' domain.
         """
         
-        response = self.llm.invoke(prompt)
-        
-        # 3. Parsing (Simple extraction logic)
         try:
-            # Note: In production, use structured output (LLM with tools/schema)
-            # For skeleton, we simulate the output list
-            raw_content = response.content
-            # Simulating output for stability in skeleton
-            candidates = [
-                StartupProfile(
-                    name="FutureChip AI", 
-                    domain="AI chip", 
-                    investment_stage="Series B",
-                    description="Specializing in ultra-low power NPU for edge computing.",
-                    relevance_score=0.95
-                )
-            ]
+            result = self.structured_llm.invoke(prompt)
+            candidates = result.candidates if result else []
+            
+            # 검색 결과가 전혀 없을 경우에 대한 예외 처리
+            if not candidates:
+                print("No candidates found in PDF. Using industry trend keywords.")
+                # (생략: 필요시 기본값이나 재검색 로직)
         except Exception as e:
-            print(f"Error parsing discovery results: {e}")
+            print(f"Error in Structured Output: {e}")
             candidates = []
         
         return {"startup_candidates": candidates}

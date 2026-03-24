@@ -10,7 +10,7 @@ async def main():
     
     # 2. Define initial state
     initial_state = {
-        "question": "Identify and evaluate promising AI chip startups specializing in edge computing.",
+        "question": "What are the investment opportunities in high-bandwidth memory (HBM) and AI accelerators as mentioned in recent reports?",
         "target_domain": "Semiconductor AI",
         "startup_candidates": [],
         "validation_results": [],
@@ -21,18 +21,28 @@ async def main():
         "is_done": False
     }
     
-    # 3. Run the graph
-    print("Starting Hierarchical Agentic RAG Pipeline...")
-    async for event in app.astream(initial_state):
-        for node_name, output in event.items():
-            print(f"\n[Node: {node_name}]")
-            # print(output)
-            
-    # 4. Final Result
-    final_state = await app.ainvoke(initial_state)
+    # 3. Run the graph with streaming
     print("\n" + "="*50)
-    print("FINAL REPORT GENERATED:")
-    print(final_state.get("final_report"))
+    print("🚀 STARTING HIERARCHICAL AGENTIC RAG PIPELINE")
+    print("="*50)
+    
+    final_state = initial_state
+    async for event in app.astream(initial_state, stream_mode="values"):
+        final_state = event # Keep track of the latest state
+        # (Optional: Add more granular logging here)
+
+    # 4. Final Output Display
+    print("\n" + "🏁 PIPELINE COMPLETE")
+    print("="*50)
+    print("\n[FINAL INVESTMENT REPORT]")
+    print(final_state.get("final_report", "No report generated."))
+    
+    if final_state.get("validation_results"):
+        print("\n[DETAILED SCORING]")
+        for res in final_state["validation_results"]:
+            status = "✅ PASS" if res.passed else "❌ HOLD"
+            print(f"- {res.startup_name}: {res.score} pts [{status}]")
+            print(f"  Reason: {res.reason}")
 
 if __name__ == "__main__":
     asyncio.run(main())

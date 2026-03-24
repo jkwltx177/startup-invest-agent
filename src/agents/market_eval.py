@@ -1,43 +1,43 @@
+from typing import List
 from langchain_openai import ChatOpenAI
 from src.graph.state import GraphState
 from src.schema.models import MarketAnalysis
 from src.tools.retriever import SemiconductorRetriever
+from pydantic import BaseModel, Field
+
+class MarketAnalysisList(BaseModel):
+    analyses: List[MarketAnalysis] = Field(description="List of market analyses for each candidate")
 
 class MarketEvalAgent:
     def __init__(self, model_name="gpt-4o"):
-        self.llm = ChatOpenAI(model=model_name)
+        self.llm = ChatOpenAI(model=model_name, temperature=0)
+        self.structured_llm = self.llm.with_structured_output(MarketAnalysisList)
         self.retriever = SemiconductorRetriever()
 
     def __call__(self, state: GraphState):
-        """
-        Market Evaluation Agent: Analyze industry reports using RAG.
-        Extract TAM/SAM/SOM and CAGR data for found candidates.
-        """
-        print("--- MARKET EVAL AGENT: RAG ANALYSIS ---")
+        print("--- MARKET EVAL AGENT: ANALYZING MARKET DATA FROM PDF ---")
         candidates = state.get("startup_candidates", [])
-        market_analyses = []
+        if not candidates:
+            return {"market_analyses": []}
+
+        # 모든 후보자에 대한 통합 컨텍스트 검색
+        candidate_names = ", ".join([c.name for d in candidates])
+        context = self.retriever.get_context(f"Market analysis, TAM, SAM, SOM, CAGR for: {candidate_names}", k=10)
         
-        for candidate in candidates:
-            # 1. RAG search for market size/trends specific to the startup's domain
-            context = self.retriever.get_context(f"Market size, TAM SAM SOM, CAGR for {candidate.domain}")
-            
-            # 2. LLM evaluates attractiveness
-            prompt = f"""
-            Analyze the market potential for {candidate.name} in the {candidate.domain} domain.
-            Market Context: {context}
-            
-            Provide: TAM/SAM/SOM, CAGR, and Investment Attractiveness.
-            """
-            response = self.llm.invoke(prompt)
-            
-            # 3. Aggregate results
-            analysis = MarketAnalysis(
-                startup_name=candidate.name,
-                market_size="TAM: $5B, SAM: $800M (estimated)",
-                growth_rate="CAGR 15%",
-                market_position="Challenger",
-                investment_attractiveness="High"
-            )
-            market_analyses.append(analysis)
+        prompt = f"""
+        Analyze the market potential for the following startups using the context provided.
+        Context: {context}
+        
+        Startups to analyze: {[c.name for c in candidates]}
+        
+        Extract TAM/SAM/SOM and growth rate (CAGR) if available in the reports (like Samsung/SK Hynix or trend reports).
+        """
+        
+        try:
+            result = self.structured_llm.invoke(prompt)
+            market_analyses = result.analyses if result else []
+        except Exception as e:
+            print(f"Error in Market Eval Structured Output: {e}")
+            market_analyses = []
             
         return {"market_analyses": market_analyses}
