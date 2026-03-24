@@ -30,7 +30,12 @@ class CustomPDFLoader:
         return documents
 
 class SemiconductorRetriever:
-    def __init__(self, index_path: str = ".cache/faiss_index_bge-m3-ko", data_dir: str = "data", model_name: str = "dragonkue/BGE-m3-ko"):
+    def __init__(
+        self,
+        index_path: str = ".cache/faiss_index_bge-m3-ko",
+        data_dir: str = "data",
+        model_name: str = "dragonkue/BGE-m3-ko",
+    ):
         self.index_path = Path(index_path)
         self.data_dir = Path(data_dir)
         # 한국어 최적화 모델 또는 BGE-M3 (design-deliverables.md 및 preprocessing_embedding.md 기준)

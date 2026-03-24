@@ -30,3 +30,6 @@ class GraphState(TypedDict):
     # ── [Final Output] ──
     selected_startup: Annotated[Optional[str], "Final selected startup name"]
     final_report: Annotated[Optional[str], "Generated markdown investment report"]
+    report_file_path: Annotated[Optional[str], "Path to saved report file (PDF)"]
+    report_regeneration_count: Annotated[int, "Number of report regenerate attempts"]
+    all_hold: Annotated[bool, "True when all candidates are on hold (no investment)"]
