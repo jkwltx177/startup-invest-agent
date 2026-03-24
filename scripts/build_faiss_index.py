@@ -23,6 +23,11 @@ os.environ["TRANSFORMERS_CACHE"] = str(_hf_cache)
 
 sys.path.insert(0, str(_project_root))
 
+from dotenv import load_dotenv
+load_dotenv(_project_root / ".env")
+if not os.environ.get("HF_TOKEN") and os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
+    os.environ["HF_TOKEN"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter

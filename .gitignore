@@ -19,8 +19,8 @@ ENV/
 
 # Data & Cache
 .cache/
-!.cache/faiss_index_bge-m3/
-!.cache/faiss_index_bge-m3/**
+reports/
+output/
 *.db
 *.sqlite
 

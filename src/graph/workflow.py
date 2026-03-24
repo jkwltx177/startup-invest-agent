@@ -68,27 +68,7 @@ def create_workflow():
     workflow.add_edge("market_eval", "supervisor")
     workflow.add_edge("competitor", "supervisor")
 
-    # Decision Node router (Hold -> back to Supervisor)
-    def decision_router(state: GraphState):
-        results = state.get("validation_results", [])
-        if not results:
-            return "supervisor"
-        
-        # If any startup passed, generate report
-        if any(r.passed for r in results):
-            return "report_gen"
-        else:
-            # 보류 (Hold) -> back to Supervisor for retry/refinement
-            return "supervisor"
-
-    workflow.add_conditional_edges(
-        "decision",
-        decision_router,
-        {
-            "report_gen": "report_gen",
-            "supervisor": "supervisor"
-        }
-    )
+    workflow.add_edge("decision", "report_gen")
 
     workflow.add_edge("report_gen", END)
 
