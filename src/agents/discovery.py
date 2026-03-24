@@ -9,45 +9,50 @@ from pydantic import BaseModel, Field
 class StartupList(BaseModel):
     candidates: List[StartupProfile] = Field(description="List of identified semiconductor startups")
 
+class QueryExpansion(BaseModel):
+    sub_queries: List[str] = Field(description="List of sub-queries for broader search")
+
 class DiscoveryAgent:
     def __init__(self, model_name="gpt-4o"):
-        # Structured Output을 위해 llm 설정
         self.llm = ChatOpenAI(model=model_name, temperature=0)
         self.structured_llm = self.llm.with_structured_output(StartupList)
+        self.expansion_llm = self.llm.with_structured_output(QueryExpansion)
         self.retriever = SemiconductorRetriever()
 
     def __call__(self, state: GraphState):
-        print("--- DISCOVERY AGENT: EXTRACTING FROM REAL PDF ---")
+        print("--- DISCOVERY AGENT: PRE-RETRIEVAL BRANCHING ---")
         question = state["question"]
         
-        # 1. RAG 검색 (data/ 폴더의 삼성, SK, 산업 리포트 등 활용)
-        context = self.retriever.get_context(f"Semiconductor companies and startups mentioned in: {question}", k=10)
-        
-        # 2. LLM이 컨텍스트에서 실제 기업 정보 추출
-        prompt = f"""
-        You are a semiconductor investment analyst. Based on the provided context, 
-        identify and profile the companies or startups that match the user's interest.
-        
-        Context:
-        {context}
-        
-        User Query:
-        {question}
-        
-        If specific startups aren't found, look for company names mentioned in the industry trend reports.
-        Assign a relevance_score (0-1) based on how well they match the 'semiconductor' domain.
+        # 1. Query Expansion (Branching)
+        expansion_prompt = f"""
+        Expand the following user query into 3-4 specialized sub-queries for finding semiconductor startups.
+        Focus on different parts of the value chain (AI chip, EDA, Fab AI, Design Automation).
+        Query: {question}
         """
+        expansion = self.expansion_llm.invoke(expansion_prompt)
+        sub_queries = expansion.sub_queries if expansion else [question]
+        print(f"Sub-queries generated: {sub_queries}")
         
-        try:
-            result = self.structured_llm.invoke(prompt)
-            candidates = result.candidates if result else []
+        # 2. Parallel-ish Retrieval (Accumulating results from multiple sub-queries)
+        all_candidates = []
+        for q in sub_queries:
+            context = self.retriever.get_context(q, k=5)
             
-            # 검색 결과가 전혀 없을 경우에 대한 예외 처리
-            if not candidates:
-                print("No candidates found in PDF. Using industry trend keywords.")
-                # (생략: 필요시 기본값이나 재검색 로직)
-        except Exception as e:
-            print(f"Error in Structured Output: {e}")
-            candidates = []
+            extraction_prompt = f"""
+            Identify and profile semiconductor startups from the following context for sub-query: {q}
+            Context: {context}
+            """
+            try:
+                result = self.structured_llm.invoke(extraction_prompt)
+                if result and result.candidates:
+                    all_candidates.extend(result.candidates)
+            except Exception as e:
+                print(f"Error in discovery for sub-query '{q}': {e}")
+                
+        # 3. Deduplicate and normalize
+        unique_candidates = {c.name: c for c in all_candidates}.values()
         
-        return {"startup_candidates": candidates}
+        print(f"Found {len(unique_candidates)} unique candidates.")
+        
+        # Corrective Loop logic would be handled by Supervisor by incrementing iteration count if 0 candidates found
+        return {"startup_candidates": list(unique_candidates)}

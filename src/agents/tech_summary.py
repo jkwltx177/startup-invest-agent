@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from langchain_openai import ChatOpenAI
 from src.graph.state import GraphState
 from src.schema.models import TechSummary
@@ -8,37 +8,53 @@ from pydantic import BaseModel, Field
 class TechSummaryList(BaseModel):
     summaries: List[TechSummary] = Field(description="List of technical summaries for each candidate")
 
+class TechQualityCheck(BaseModel):
+    is_sufficient: bool = Field(description="Whether the technical information is detailed and sourced")
+    missing_elements: List[str] = Field(description="Elements missing from the analysis (e.g., TRL, Patent, Core Mechanism)")
+
 class TechSummaryAgent:
     def __init__(self, model_name="gpt-4o"):
         self.llm = ChatOpenAI(model=model_name, temperature=0)
         self.structured_llm = self.llm.with_structured_output(TechSummaryList)
+        self.quality_llm = self.llm.with_structured_output(TechQualityCheck)
         self.retriever = SemiconductorRetriever()
 
     def __call__(self, state: GraphState):
-        print("--- TECH SUMMARY AGENT: ANALYZING TECHNICAL SPECS FROM PDF ---")
+        print("--- TECH SUMMARY AGENT: INDIVIDUAL ANALYSES WITH QUALITY CHECK ---")
         candidates = state.get("startup_candidates", [])
         if not candidates:
             return {"tech_summaries": []}
 
-        # 후보 기업들의 기술적 키워드를 바탕으로 컨텍스트 검색
-        tech_queries = ", ".join([f"{c.name} {c.domain} technology" for c in candidates])
-        context = self.retriever.get_context(f"Technical details, architecture, and innovation: {tech_queries}", k=10)
-        
-        prompt = f"""
-        Analyze the core technology and innovations for the following startups using the context provided.
-        Context: {context}
-        
-        Startups to analyze: {[c.name for c in candidates]}
-        
-        Identify: tech_type, core_mechanism, application_area, differentiation, strengths, and weaknesses.
-        Focus on technical Moat (moat) and specific semiconductor innovations.
-        """
-        
-        try:
-            result = self.structured_llm.invoke(prompt)
-            tech_summaries = result.summaries if result else []
-        except Exception as e:
-            print(f"Error in Tech Summary Structured Output: {e}")
-            tech_summaries = []
+        all_summaries = []
+        for startup in candidates:
+            print(f"Analyzing technology for {startup.name}...")
             
-        return {"tech_summaries": tech_summaries}
+            # Individual Retrieval
+            context = self.retriever.get_context(f"Technical architecture, core mechanism, and innovation of {startup.name} in {startup.domain}", k=6)
+            
+            prompt = f"""
+            Identify and analyze the core technology of {startup.name} ({startup.domain}).
+            Context: {context}
+            
+            Extract: tech_type, core_mechanism, application_area, differentiation, strengths, weaknesses.
+            """
+            
+            try:
+                # 1. Generate Summary
+                result = self.structured_llm.invoke(prompt)
+                summary = result.summaries[0] if result and result.summaries else None
+                
+                if summary:
+                    # 2. Quality Check
+                    q_prompt = f"Verify if this summary of {startup.name} tech is sufficient based on context: {summary.json()}\nContext: {context}"
+                    quality = self.quality_llm.invoke(q_prompt)
+                    
+                    if not quality.is_sufficient:
+                        print(f"Warning: Tech summary for {startup.name} is lacking: {quality.missing_elements}")
+                        # (Optional: One-time retry with broader search)
+                    
+                    all_summaries.append(summary)
+            except Exception as e:
+                print(f"Error in Tech Summary for {startup.name}: {e}")
+            
+        return {"tech_summaries": all_summaries}

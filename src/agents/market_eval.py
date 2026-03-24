@@ -8,36 +8,57 @@ from pydantic import BaseModel, Field
 class MarketAnalysisList(BaseModel):
     analyses: List[MarketAnalysis] = Field(description="List of market analyses for each candidate")
 
+class MarketQualityCheck(BaseModel):
+    is_sufficient: bool = Field(description="Whether the market data is detailed and sourced")
+    missing_elements: List[str] = Field(description="Missing market data points (TAM, SAM, SOM, CAGR)")
+
 class MarketEvalAgent:
     def __init__(self, model_name="gpt-4o"):
         self.llm = ChatOpenAI(model=model_name, temperature=0)
         self.structured_llm = self.llm.with_structured_output(MarketAnalysisList)
+        self.quality_llm = self.llm.with_structured_output(MarketQualityCheck)
         self.retriever = SemiconductorRetriever()
 
     def __call__(self, state: GraphState):
-        print("--- MARKET EVAL AGENT: ANALYZING MARKET DATA FROM PDF ---")
+        print("--- MARKET EVAL AGENT: MULTI-HOP ANALYSES ---")
         candidates = state.get("startup_candidates", [])
         if not candidates:
             return {"market_analyses": []}
 
-        # 모든 후보자에 대한 통합 컨텍스트 검색
-        candidate_names = ", ".join([c.name for c in candidates])
-        context = self.retriever.get_context(f"Market analysis, TAM, SAM, SOM, CAGR for: {candidate_names}", k=10)
-        
-        prompt = f"""
-        Analyze the market potential for the following startups using the context provided.
-        Context: {context}
-        
-        Startups to analyze: {[c.name for c in candidates]}
-        
-        Extract TAM/SAM/SOM and growth rate (CAGR) if available in the reports (like Samsung/SK Hynix or trend reports).
-        """
-        
-        try:
-            result = self.structured_llm.invoke(prompt)
-            market_analyses = result.analyses if result else []
-        except Exception as e:
-            print(f"Error in Market Eval Structured Output: {e}")
-            market_analyses = []
+        all_analyses = []
+        for startup in candidates:
+            print(f"Analyzing market for {startup.name}...")
             
-        return {"market_analyses": market_analyses}
+            # Step 1: Broad Market Search
+            broad_context = self.retriever.get_context(f"Market size, TAM, SAM, SOM and CAGR for {startup.domain} semiconductor segment", k=5)
+            
+            # Step 2: Focused Startup Potential Search (Multi-hop)
+            focused_context = self.retriever.get_context(f"{startup.name} market share, potential customers, and target segment in {startup.domain}", k=5)
+            
+            combined_context = f"BROAD MARKET CONTEXT:\n{broad_context}\n\nFOCUSED CONTEXT:\n{focused_context}"
+            
+            prompt = f"""
+            Analyze the market potential of {startup.name} using the provided context.
+            Extract TAM/SAM/SOM and growth rate (CAGR) if available.
+            Context: {combined_context}
+            """
+            
+            try:
+                # 1. Generate Analysis
+                result = self.structured_llm.invoke(prompt)
+                analysis = result.analyses[0] if result and result.analyses else None
+                
+                if analysis:
+                    # 2. Quality Check
+                    q_prompt = f"Verify if this market analysis of {startup.name} is sufficient based on context: {analysis.json()}\nContext: {combined_context}"
+                    quality = self.quality_llm.invoke(q_prompt)
+                    
+                    if not quality.is_sufficient:
+                        print(f"Warning: Market data for {startup.name} is lacking: {quality.missing_elements}")
+                        # (Optional: Recursion or retry logic)
+                    
+                    all_analyses.append(analysis)
+            except Exception as e:
+                print(f"Error in Market Eval for {startup.name}: {e}")
+                
+        return {"market_analyses": all_analyses}
