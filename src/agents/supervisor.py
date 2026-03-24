@@ -1,5 +1,4 @@
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
 from src.graph.state import GraphState
 
 class Supervisor:
@@ -8,23 +7,30 @@ class Supervisor:
 
     def __call__(self, state: GraphState):
         """
-        Master Agent that controls the flow.
-        Decides which agent to run next based on current state.
+        Master Agent: Orchestrates the flow.
+        Agents never communicate directly; they return to Supervisor.
         """
-        # Logic to determine next_agent
-        # For prototype, we'll just set it manually or based on some conditions
-        print("--- SUPERVISOR ---")
+        print(f"--- SUPERVISOR (Iteration: {state.get('iteration_count', 0)}) ---")
         
-        # Determine current progress
+        # 1. Start with discovery if no candidates found
         if not state.get("startup_candidates"):
             return {"next_agent": "discovery"}
         
-        if not state.get("tech_summaries") or not state.get("market_analyses"):
-            # Could run tech_summary and market_eval in parallel
-            # For simplicity in this skeleton, we trigger them sequentially or as active agents
-            return {"next_agent": "workers"} # Logic to trigger multiple
+        # 2. Once candidates exist, perform deep analysis
+        # Check if analysis is complete for all candidates
+        has_tech = len(state.get("tech_summaries", [])) >= len(state.get("startup_candidates", []))
+        has_market = len(state.get("market_analyses", [])) >= len(state.get("startup_candidates", []))
+        
+        if not has_tech or not has_market:
+            # Trigger parallel workers via the graph router
+            return {"next_agent": "workers"}
             
-        if not state.get("final_report"):
+        # 3. Decision phase
+        if not state.get("validation_results"):
             return {"next_agent": "decision"}
             
+        # 4. Final routing based on decision results
+        # (This logic is also handled in the graph's conditional edges, 
+        # but the supervisor can set flags or signals here)
+        
         return {"next_agent": "end"}
