@@ -11,12 +11,11 @@
 - **Core Goal**: 신뢰성 있는 데이터를 바탕으로 스타트업의 기술력, 시장성, 경쟁력을 종합 평가하여 투자 보고서 생성
 
 ## 2. Agent Structure
-- **Supervisor (Master Agent)**: 전체 흐름 제어, 의도 파악 및 Task Orchestration.
+- **Supervisor (Master Agent)**: 전체 흐름 제어, 의도 파악 및 Task Orchestration, 최종 Scorecard 기반 가중치 점수 산출 및 투자/보류 판단.
 - **Startup Discovery Agent**: RAG 및 웹 검색을 통한 후보 기업 발굴 및 기본 정보 추출.
 - **Technology Summary Agent**: 기술 문서(논문, IR 등) RAG 분석을 통한 기술적 해자(Moat) 및 차별성 평가.
 - **Market Evaluation Agent**: 산업 리포트 RAG 분석을 통한 TAM/SAM/SOM 및 시장 성장성 분석.
 - **Competitor Comparison Agent**: 경쟁사 식별 및 포지셔닝 분석.
-- **Investment Decision Agent**: Scorecard 기반 가중치 점수 산출 및 투자/보류 판단.
 - **Report Generation Agent**: 분석된 모든 데이터를 종합하여 마크다운 형식의 투자 분석 보고서 생성.
 
 ## 3. Tech Stack 
