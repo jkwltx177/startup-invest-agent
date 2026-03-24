@@ -56,6 +56,111 @@
 | **Decision** | Scorecard·Gate 적용 후 투자/보류 |
 | **Report** | 투자 검토 보고서(또는 보류 보고서) Markdown 작성 및 PDF 저장 |
 
+## 각 에이전트 키포인트
+
+
+## Supervisor
+전체 파이프라인의 라우팅 컨트롤러.
+
+`judge_quality()`로 후보·기술분석·시장분석의 커버리지 점수(0~1.0)를 산출하고, GPT-4o-mini에게 현재 상태를 전달하여 `next_agent`를 결정합니다.
+
+```
+coverage_score:
+  candidates 존재      → +0.3
+  tech_summaries 충분  → +0.3
+  market_analyses 충분 → +0.4
+  ────────────────────────────
+  1.0 달성 시 'decision'으로 라우팅
+```
+
+---
+
+## DiscoveryAgent
+
+① 질의를 반도체 Value Chain 기준 Sub-query로 분해 (Query Expansion)
+② 각 Sub-query 병렬 검색 → 결과 Fusion → 중복 제거 → Top-K 선정
+③ Judge: 후보 수, 반도체 관련성, 스타트업 여부, 트렌드 점수 평가
+④ 미달 시 Query Rewrite + 도메인 필터 조정 후 재탐색 (최대 3회)
+⑤ CP-2 HITL: 통과 후 사람에게 후보 확정 요청
+
+### Judge 기준
+
+```
+- 후보 수가 너무 적은가
+- 타겟 도메인(반도체) 외 산업이 섞였는가
+- 같은 회사가 중복되는가
+- 스타트업인가
+    - 빠른 확장과 시장 선점
+    - 상당히 빠름 (10배 성장 등)
+    - 혁신적이고 독창적인 기술·서비스 중심
+    - 매우 높은 리스크 (시장, 기술, 고객 관점)
+    - M&A, IPO 등 Exit 전략 존재
+    - 투자 중심 (VC, 엔젤 등)
+- 트렌드 점수 낮으면 재탐색
+```
+
+---
+
+## TechSummaryAgent & CompetitorAgent
+
+**포인트: Memory-first Retrieval + Post-Retrieval Re-ranking + Self-Evaluation Loop**
+
+- GraphState에 저장된 요약 캐시를 우선 조회하여 기존 분석 결과 재사용
+- 정보 부족 시에만 웹 검색을 추가로 수행하여 최신 데이터 보완
+- Self-Evaluation Loop로 기술 설명의 구체성·출처 일관성·핵심 지표 포함 여부를 검증하고 필요 시 재검색 또는 재생성 수행
+
+---
+
+## InvestmentDecisionAgent
+
+스코어카드 방식으로 평가합니다.
+
+- **70점 이상** → `passed = True` (투자 권고)
+- **전원 미달** → `all_hold = True` (전부 보류)
+- HITL 승인 후 보고서 단계 진입
+
+> 각 항목에서 **Score = 1이면 즉시 `risk_flag = 1`** 로 Decision Logic에 넘겨 보류 판단합니다.
+
+---
+
+### ① Scorecard Method 기반 항목 (60%)
+
+| 항목 | 비중 | 평가 의의 | Score Mapping |
+|---|---|---|---|
+| 창업자 | 15% | 팀 역량 | 5: Ex-NVIDIA/Google/TSMC 창업자<br>4: 반도체/AI 10년+ 경험<br>3: 관련 산업 경험 있음<br>2: 스타트업 경험만 있음<br>1: 관련 경험 없음 |
+| 시장성 | 15% | 시장 크기 | 5: TAM > $50B AI semiconductor<br>4: TAM > $20B<br>3: TAM > $5B<br>2: niche market<br>1: 시장 불명확 ⚑ |
+| 제품/기술 | 10% | 기술 실행력 | 5: 양산 chip 존재<br>4: tape-out 완료<br>3: PoC / prototype<br>2: architecture 설계만<br>1: 아이디어 단계 ⚑ |
+| 경쟁 우위 | 8% | 진입장벽 | 5: GPU 대비 성능/전력 우위 있음<br>1: 차별성 없음 ⚑ |
+| 실적 | 6% | 시장 검증 | 5: design win / 고객 존재<br>1: 고객 없음 |
+| 투자조건 | 6% | 투자 리스크 | 5: seed / series A 적정 valuation<br>1: 과대 valuation / late stage ⚑ |
+
+---
+
+### ② Semiconductor 특화 항목 (25%)
+
+| 항목 | 비중 | 평가 의의 | Score Mapping |
+|---|---|---|---|
+| 반도체 기술 차별성 | 8% | 핵심 경쟁력 | 5: 독자 NPU/AI accelerator architecture<br>4: custom AI chip 구조<br>3: 기존 chip 개선<br>2: FPGA 기반<br>1: SW only |
+| 제품 단계 | 5% | 실행력 | 5: 양산 chip<br>4: tape-out<br>3: silicon validation<br>2: RTL 완료<br>1: concept ⚑ |
+| 데이터 접근성 | 4% | AI 성능 핵심 | 5: fab / 고객 데이터 확보<br>1: 데이터 없음 |
+| 생태계 적합성 | 4% | 시장 진입 | 5: SDK / SW stack 제공<br>1: hardware only |
+| IP / 특허 | 4% | 장기 경쟁력 | 5: 핵심 특허 존재<br>1: 특허 없음 |
+
+---
+
+### ③ 산업 트렌드 적합성 (15%)
+
+| 항목 | 비중 | 평가 의의 | Score Mapping |
+|---|---|---|---|
+| 산업 트렌드 적합성 | 5% | 타이밍 | 5: AI / HBM / DRAM 트렌드 직접 관련<br>1: 트렌드와 무관 |
+| 기술 적용 영역 | 4% | 시장 크기 | 5: 설계 + 공정 + 시스템 적용<br>1: 단일 영역 |
+| 고객 산업 적합성 | 3% | 수요 | 5: hyperscaler / foundry 고객 가능<br>1: 고객 불명확 ⚑ |
+| 성장성 | 3% | 확장성 | 5: roadmap 존재 / 확장 가능<br>1: 단일 제품 |
+
+---
+
+> ⚑ 표시 항목은 Score = 1이면 즉시 `risk_flag = 1` → 보류 판단
+
 ## 4. 투자 검토 보고서
 
 투자·보류 여부와 관계없이, 보고서 에이전트는 **기관 투자 검토 문서** 형태에 가깝게 Markdown을 만듭니다.
@@ -102,27 +207,6 @@
 ├── UPGRADE_REPORT.md           # 시스템 고도화 및 임베딩 업그레이드 이력
 └── semiconductor_ai_investment_flowchart_v3.svg
 ```
-
-## 7. 시작하기
-
-1. **환경 변수**  
-   프로젝트 루트에 `.env`를 두고, 실행에 필요한 키를 설정합니다.  
-   (예: LLM, 선택적 웹 검색·Hugging Face 캐시 등 — `scripts/run_full.py` 상단 주석 참고)
-2. **의존성**  
-   `uv sync` 또는 `pip install -e .` 등 `pyproject.toml` 기준으로 설치합니다.
-3. **RAG 인덱스**  
-   `data/`에 PDF를 넣은 뒤 `uv run python scripts/build_faiss_index.py`로 FAISS 인덱스를 만들 수 있습니다. (없으면 실행 시 생성 시도)
-4. **실행**  
-   ```bash
-   uv run python scripts/run_full.py
-   ```  
-   또는 질의를 인자로:  
-   `uv run python scripts/run_full.py "질의 내용"`
-
-## 8. 기타
-
-- 상세 설계·용어는 `design-deliverables.md`, `agents_detail.md` 등을 참고하세요.
-- 예전 문서에 있던 “다중 루프 Corrective RAG 자동 3회” 같은 설명은 **현재 그래프와 다를 수 있습니다.** 실제 동작은 `src/graph/workflow.py` 기준입니다.
 
 ## Contributors
 
