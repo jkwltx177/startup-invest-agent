@@ -15,6 +15,9 @@ class GraphState(TypedDict):
     
     next_agent: Annotated[str, "Next node to execute"]
     active_agents: Annotated[List[str], "Currently active worker agents"]
+    candidate_eval_index: Annotated[int, "현재 순차 평가 중인 후보 인덱스 (0~4)"]
+    evaluation_target_name: Annotated[Optional[str], "현재 평가 대상 스타트업명 (단일)"]
+    last_decision_passed: Annotated[bool, "직전 decision에서 투자 승인 여부"]
     
     # ── [Worker Results (Accumulated)] ──
     startup_candidates: Annotated[List[StartupProfile], operator.add]

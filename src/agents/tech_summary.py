@@ -25,6 +25,9 @@ class TechSummaryAgent:
     def __call__(self, state: GraphState):
         print("\n>>> [tech_summary] 기술 분석 실행 중...", flush=True)
         candidates = state.get("startup_candidates", [])
+        target = (state.get("evaluation_target_name") or "").strip()
+        if target:
+            candidates = [c for c in candidates if (c.name or "").strip() == target]
         if not candidates:
             return {"tech_summaries": []}
 
@@ -48,6 +51,7 @@ class TechSummaryAgent:
                 summary = result.summaries[0] if result and result.summaries else None
 
                 if summary:
+                    summary.startup_name = startup.name
                     q_prompt = f"Verify if this summary of {startup.name} tech is sufficient based on context: {summary.model_dump_json()}\nContext: {context}"
                     quality = self.quality_llm.invoke(q_prompt)
 

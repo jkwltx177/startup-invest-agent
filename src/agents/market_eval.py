@@ -25,6 +25,9 @@ class MarketEvalAgent:
     def __call__(self, state: GraphState):
         print("\n>>> [market_eval] 시장 분석 실행 중...", flush=True)
         candidates = state.get("startup_candidates", [])
+        target = (state.get("evaluation_target_name") or "").strip()
+        if target:
+            candidates = [c for c in candidates if (c.name or "").strip() == target]
         if not candidates:
             return {"market_analyses": []}
 
@@ -52,6 +55,7 @@ class MarketEvalAgent:
                 analysis = result.analyses[0] if result and result.analyses else None
 
                 if analysis:
+                    analysis.startup_name = startup.name
                     q_prompt = f"Verify if this market analysis of {startup.name} is sufficient based on context: {analysis.model_dump_json()}\nContext: {combined_context}"
                     quality = self.quality_llm.invoke(q_prompt)
 

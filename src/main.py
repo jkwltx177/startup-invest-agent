@@ -12,13 +12,17 @@ async def main():
     initial_state = {
         "question": "What are the investment opportunities in high-bandwidth memory (HBM) and AI accelerators as mentioned in recent reports?",
         "target_domain": "Semiconductor AI",
+        "candidate_eval_index": 0,
+        "evaluation_target_name": None,
+        "last_decision_passed": False,
         "startup_candidates": [],
         "validation_results": [],
         "tech_summaries": [],
         "market_analyses": [],
         "judge_history": [],
         "iteration_count": 0,
-        "is_done": False
+        "is_done": False,
+        "all_hold": False,
     }
     
     # 3. Run the graph with streaming

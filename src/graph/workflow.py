@@ -8,8 +8,8 @@ from src.agents.competitor import CompetitorAgent
 from src.agents.decision import InvestmentDecisionAgent
 from src.agents.report_gen import ReportAgent
 
+
 def create_workflow():
-    # Initialize Agents
     supervisor = Supervisor()
     discovery = DiscoveryAgent()
     tech_summary = TechSummaryAgent()
@@ -18,10 +18,8 @@ def create_workflow():
     decision = InvestmentDecisionAgent()
     report_gen = ReportAgent()
 
-    # Create Graph
     workflow = StateGraph(GraphState)
 
-    # Add Nodes
     workflow.add_node("supervisor", supervisor)
     workflow.add_node("discovery", discovery)
     workflow.add_node("tech_summary", tech_summary)
@@ -30,22 +28,16 @@ def create_workflow():
     workflow.add_node("decision", decision)
     workflow.add_node("report_gen", report_gen)
 
-    # Define Edges
     workflow.add_edge(START, "supervisor")
-    
-    # Conditional logic for Supervisor
+
     def supervisor_router(state: GraphState):
-        next_agent = state.get("next_agent")
-        if next_agent == "discovery":
+        n = state.get("next_agent")
+        if n == "discovery":
             return "discovery"
-        if next_agent == "workers":
-            return ["tech_summary", "market_eval", "competitor"]
-        if next_agent == "decision":
-            return "decision"
-        if next_agent == "report_gen":
+        if n == "tech_summary":
+            return "tech_summary"
+        if n == "report_gen":
             return "report_gen"
-        if next_agent == "end":
-            return END
         return END
 
     workflow.add_conditional_edges(
@@ -54,21 +46,26 @@ def create_workflow():
         {
             "discovery": "discovery",
             "tech_summary": "tech_summary",
-            "market_eval": "market_eval",
-            "competitor": "competitor",
-            "decision": "decision",
             "report_gen": "report_gen",
-            "end": END
-        }
+            END: END,
+        },
     )
 
-    # Workers back to Supervisor for consolidation/routing
     workflow.add_edge("discovery", "supervisor")
-    workflow.add_edge("tech_summary", "supervisor")
-    workflow.add_edge("market_eval", "supervisor")
-    workflow.add_edge("competitor", "supervisor")
+    workflow.add_edge("tech_summary", "market_eval")
+    workflow.add_edge("market_eval", "competitor")
+    workflow.add_edge("competitor", "decision")
 
-    workflow.add_edge("decision", "report_gen")
+    def after_decision(state: GraphState):
+        if state.get("last_decision_passed"):
+            return "report_gen"
+        return "supervisor"
+
+    workflow.add_conditional_edges(
+        "decision",
+        after_decision,
+        {"report_gen": "report_gen", "supervisor": "supervisor"},
+    )
 
     workflow.add_edge("report_gen", END)
 

@@ -55,8 +55,9 @@ class DiscoveryAgent:
         unique_candidates = {c.name: c for c in all_candidates}.values()
         ranked = sorted(unique_candidates, key=lambda c: c.relevance_score, reverse=True)[: self.top_k]
 
-        print(f"Found {len(ranked)} unique candidates (Top {self.top_k}).", flush=True)
-        print("   " + ", ".join(c.name for c in ranked), flush=True)
+        print(f"발굴 결과: 상위 {len(ranked)}개 (Rank 1~{self.top_k}).", flush=True)
+        for i, c in enumerate(ranked, start=1):
+            print(f"   Rank {i}: {c.name} ({c.domain}) | relevance={c.relevance_score:.2f}", flush=True)
 
         if not human_approve("discovery", f"발굴된 후보 {len(ranked)}건. 계속 진행하시겠습니까?"):
             return {"startup_candidates": []}

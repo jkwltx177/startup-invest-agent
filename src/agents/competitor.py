@@ -25,6 +25,9 @@ class CompetitorAgent:
     def __call__(self, state: GraphState):
         print("\n>>> [competitor] 경쟁사 분석 실행 중...", flush=True)
         candidates = state.get("startup_candidates", [])
+        target = (state.get("evaluation_target_name") or "").strip()
+        if target:
+            candidates = [c for c in candidates if (c.name or "").strip() == target]
         if not candidates:
             return {"active_agents": ["competitor_skipped"]}
 

@@ -22,9 +22,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# huggingface_hub는 HF_TOKEN 사용. HUGGINGFACEHUB_API_TOKEN 있으면 자동 매핑
-if not os.environ.get("HF_TOKEN") and os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
+# Hugging Face: .env의 HF_TOKEN ↔ huggingface_hub가 읽는 이름 동기화
+_hf = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+if _hf:
+    os.environ.setdefault("HF_TOKEN", _hf)
+    os.environ.setdefault("HUGGINGFACE_HUB_TOKEN", _hf)
+elif os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
     os.environ["HF_TOKEN"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+    os.environ.setdefault("HUGGINGFACE_HUB_TOKEN", os.environ["HF_TOKEN"])
 
 if not os.environ.get("OPENAI_API_KEY"):
     print("경고: OPENAI_API_KEY가 .env에 없습니다. 환경변수를 확인하세요.")
@@ -54,6 +59,9 @@ def main():
         "question": question,
         "target_domain": target_domain,
         "iteration_count": 0,
+        "candidate_eval_index": 0,
+        "evaluation_target_name": None,
+        "last_decision_passed": False,
         "startup_candidates": [],
         "tech_summaries": [],
         "market_analyses": [],
