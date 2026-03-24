@@ -26,7 +26,7 @@ sys.path.insert(0, str(_project_root))
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader
+from src.tools.retriever import CustomPDFLoader
 
 
 EMBEDDING_MODELS = {
@@ -37,6 +37,11 @@ EMBEDDING_MODELS = {
     },
     "kure-v1": {
         "model_name": "nlpai-lab/KURE-v1",
+        "model_kwargs": {"device": "cpu"},
+        "encode_kwargs": {"normalize_embeddings": True},
+    },
+    "bge-m3-ko": {
+        "model_name": "dragonkue/BGE-m3-ko",
         "model_kwargs": {"device": "cpu"},
         "encode_kwargs": {"normalize_embeddings": True},
     },
@@ -51,9 +56,9 @@ EMBEDDING_MODELS = {
 def build_index(
     data_dir: Path = None,
     output_dir: Path = None,
-    model_preset: str = "bge-m3",
-    chunk_size: int = 400,
-    chunk_overlap: int = 60,
+    model_preset: str = "kure-v1",
+    chunk_size: int = 800,
+    chunk_overlap: int = 150,
 ):
     data_dir = data_dir or _project_root / "data"
     cfg = EMBEDDING_MODELS.get(model_preset)
@@ -85,13 +90,13 @@ def build_index(
         add_start_index=True,
     )
 
-    print(f"[2/4] PDF 파일별 처리 (총 {len(pdf_files)}개)")
+    print(f"[2/4] PDF 파일별 처리 (CustomPDFLoader 사용, 총 {len(pdf_files)}개)")
     vectorstore = None
     total_chunks = 0
 
     for i, pdf_path in enumerate(pdf_files, 1):
         try:
-            loader = PyPDFLoader(str(pdf_path))
+            loader = CustomPDFLoader(str(pdf_path))
             docs = loader.load()
             splits = text_splitter.split_documents(docs)
             print(f"  [{i}/{len(pdf_files)}] {pdf_path.name}: {len(docs)}페이지 → {len(splits)}청크")
@@ -122,14 +127,14 @@ def main():
     parser = argparse.ArgumentParser(description="data/ PDF를 임베딩하여 FAISS에 저장")
     parser.add_argument(
         "--model", "-m",
-        choices=["bge-m3", "kure-v1", "gte-qwen"],
-        default="bge-m3",
+        choices=["bge-m3", "kure-v1", "bge-m3-ko", "gte-qwen"],
+        default="kure-v1",
         help="임베딩 모델",
     )
     parser.add_argument("--data-dir", "-d", type=Path, default=None)
     parser.add_argument("--output", "-o", type=Path, default=None)
-    parser.add_argument("--chunk-size", type=int, default=400, help="청크 크기 (작을수록 청크 많음)")
-    parser.add_argument("--chunk-overlap", type=int, default=60, help="청크 중첩")
+    parser.add_argument("--chunk-size", type=int, default=800, help="청크 크기 (작을수록 청크 많음)")
+    parser.add_argument("--chunk-overlap", type=int, default=150, help="청크 중첩")
     args = parser.parse_args()
 
     ok = build_index(

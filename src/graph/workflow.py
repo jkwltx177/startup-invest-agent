@@ -39,10 +39,11 @@ def create_workflow():
         if next_agent == "discovery":
             return "discovery"
         if next_agent == "workers":
-            # For simplicity in this graph, we fan-out
             return ["tech_summary", "market_eval", "competitor"]
         if next_agent == "decision":
             return "decision"
+        if next_agent == "report_gen":
+            return "report_gen"
         if next_agent == "end":
             return END
         return END
@@ -56,6 +57,7 @@ def create_workflow():
             "market_eval": "market_eval",
             "competitor": "competitor",
             "decision": "decision",
+            "report_gen": "report_gen",
             "end": END
         }
     )
