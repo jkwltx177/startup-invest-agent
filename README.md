@@ -25,6 +25,14 @@
 | Embedding  | `dragonkue/BGE-m3-ko` (Korean-optimized High Performance)      |
 | Search     | Tavily (Web Search)                                            |
 
+## Evaluation Metrics
+
+| Metric | Score | Note |
+| :--- | :--- | :--- |
+| **Embedding Recall@k** | **0.85** | BGE-m3-ko 기반 한국어 임베딩 벤치마크 (AutoRAG 기준) |
+| **Hit Rate@10** | **0.90** | 반도체 도메인 특화 문서 검색 정확도 |
+| **MRR (Mean Reciprocal Rank)** | **0.78** | 최상단 검색 결과의 정답 관련성 |
+
 ## Agents
 
 - **Supervisor**: 전체 흐름 제어, 데이터 품질 평가(Judge), 전략적 계획 수립 및 업무 위임
@@ -56,11 +64,7 @@
 ## Contributors
 
 - AI 1반: 김주환, 방다원, 지다은, 한상윤
-
-## Evaluation Metrics
-
-| Metric | Score | Note |
-| :--- | :--- | :--- |
-| **Embedding Recall@k** | **0.85** | BGE-m3-ko 기반 한국어 임베딩 벤치마크 (AutoRAG 기준) |
-| **Hit Rate@10** | **0.90** | 반도체 도메인 특화 문서 검색 정확도 |
-| **MRR (Mean Reciprocal Rank)** | **0.78** | 최상단 검색 결과의 정답 관련성 |
+  - 김주환: 파이프라인 설계, pdf 전처리 및 임베딩 구현, Master Agent 구현
+  - 방다원: 아키텍처 설계, Master Agent 구현, 기술 요약 Agent 구현
+  - 한상윤: 아키텍처 설계, Master Agent 구현, 시장성 평가 Agent 구현 
+  - 지다은: 아키텍처 설계, Master Agent 구현, 경쟁사 평가 Agent 구현
