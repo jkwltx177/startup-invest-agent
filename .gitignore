@@ -5,6 +5,9 @@
 11-RAG/
 20-Pattern/
 
+# Dependencies
+uv.lock
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,6 +22,8 @@ ENV/
 
 # Data & Cache
 .cache/
+!.cache/faiss_index_bge-m3/
+!.cache/faiss_index_bge-m3/**
 *.db
 *.sqlite
 
