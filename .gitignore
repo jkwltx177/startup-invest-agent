@@ -5,6 +5,9 @@
 11-RAG/
 20-Pattern/
 
+# Dependencies
+uv.lock
+
 # Python
 __pycache__/
 *.py[cod]

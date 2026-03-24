@@ -52,8 +52,8 @@ def build_index(
     data_dir: Path = None,
     output_dir: Path = None,
     model_preset: str = "bge-m3",
-    chunk_size: int = 1000,
-    chunk_overlap: int = 100,
+    chunk_size: int = 400,
+    chunk_overlap: int = 60,
 ):
     data_dir = data_dir or _project_root / "data"
     cfg = EMBEDDING_MODELS.get(model_preset)
@@ -79,35 +79,40 @@ def build_index(
         encode_kwargs=cfg["encode_kwargs"],
     )
 
-    print(f"[2/4] PDF 로드 중... ({len(pdf_files)}개 파일)")
-    documents = []
-    for pdf_path in pdf_files:
-        try:
-            loader = PyPDFLoader(str(pdf_path))
-            docs = loader.load()
-            documents.extend(docs)
-            print(f"  - {pdf_path.name}: {len(docs)} 페이지")
-        except Exception as e:
-            print(f"  - [경고] {pdf_path.name} 로드 실패: {e}")
-
-    if not documents:
-        print("[ERROR] 로드된 문서가 없습니다.")
-        return False
-
-    print(f"[3/4] 텍스트 분할 (chunk_size={chunk_size}, overlap={chunk_overlap})")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         add_start_index=True,
     )
-    splits = text_splitter.split_documents(documents)
-    print(f"  - 총 {len(splits)}개 청크 생성")
 
-    print(f"[4/4] FAISS 인덱스 생성 및 저장: {output_dir}")
-    vectorstore = FAISS.from_documents(splits, embeddings)
+    print(f"[2/4] PDF 파일별 처리 (총 {len(pdf_files)}개)")
+    vectorstore = None
+    total_chunks = 0
+
+    for i, pdf_path in enumerate(pdf_files, 1):
+        try:
+            loader = PyPDFLoader(str(pdf_path))
+            docs = loader.load()
+            splits = text_splitter.split_documents(docs)
+            print(f"  [{i}/{len(pdf_files)}] {pdf_path.name}: {len(docs)}페이지 → {len(splits)}청크")
+
+            if vectorstore is None:
+                vectorstore = FAISS.from_documents(splits, embeddings)
+            else:
+                vectorstore.add_documents(splits)
+            total_chunks += len(splits)
+        except Exception as e:
+            print(f"  [{i}/{len(pdf_files)}] [경고] {pdf_path.name} 실패: {e}")
+
+    if vectorstore is None or total_chunks == 0:
+        print("[ERROR] 처리된 문서가 없습니다.")
+        return False
+
+    print(f"[3/4] 총 {total_chunks}개 청크 생성")
+    print(f"[4/4] FAISS 인덱스 저장: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     vectorstore.save_local(str(output_dir))
-    print(f"[완료] {len(pdf_files)}개 PDF → {len(splits)}개 청크 → {output_dir}")
+    print(f"[완료] {len(pdf_files)}개 PDF → {total_chunks}개 청크 → {output_dir}")
     return True
 
 
@@ -123,8 +128,8 @@ def main():
     )
     parser.add_argument("--data-dir", "-d", type=Path, default=None)
     parser.add_argument("--output", "-o", type=Path, default=None)
-    parser.add_argument("--chunk-size", type=int, default=1000)
-    parser.add_argument("--chunk-overlap", type=int, default=100)
+    parser.add_argument("--chunk-size", type=int, default=400, help="청크 크기 (작을수록 청크 많음)")
+    parser.add_argument("--chunk-overlap", type=int, default=60, help="청크 중첩")
     args = parser.parse_args()
 
     ok = build_index(
