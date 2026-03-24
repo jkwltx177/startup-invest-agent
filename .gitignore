@@ -19,7 +19,6 @@ ENV/
 
 # Data & Cache
 .cache/
-data/
 *.db
 *.sqlite
 
