@@ -1,0 +1,35 @@
+# Templates to ignore
+01-Features/
+02-Middleware/
+10-Agent/
+11-RAG/
+20-Pattern/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Environment
+.env
+
+# Data & Cache
+.cache/
+data/
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+
+# Project files to keep
+!pyproject.toml
+!README.md
+!design-deliverables.md
+!.env.example
+!semiconductor_ai_investment_flowchart_v3.svg
+!src/
