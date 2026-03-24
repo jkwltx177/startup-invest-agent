@@ -21,7 +21,7 @@ class MarketEvalAgent:
             return {"market_analyses": []}
 
         # 모든 후보자에 대한 통합 컨텍스트 검색
-        candidate_names = ", ".join([c.name for d in candidates])
+        candidate_names = ", ".join([c.name for c in candidates])
         context = self.retriever.get_context(f"Market analysis, TAM, SAM, SOM, CAGR for: {candidate_names}", k=10)
         
         prompt = f"""

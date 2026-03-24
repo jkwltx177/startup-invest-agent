@@ -2518,20 +2518,20 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "deepagents", specifier = ">=0.2.7" },
-    { name = "faiss-cpu" },
+    { name = "faiss-cpu", specifier = ">=1.10.0" },
     { name = "finance-datareader", specifier = ">=0.9.96" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "langchain", specifier = ">=1.0.2" },
     { name = "langchain-anthropic", specifier = ">=1.0.0" },
     { name = "langchain-community", specifier = ">=0.3.31" },
     { name = "langchain-experimental", specifier = ">=0.3.4" },
-    { name = "langchain-huggingface" },
+    { name = "langchain-huggingface", specifier = ">=0.0.1" },
     { name = "langchain-mcp-adapters", specifier = ">=0.1.12" },
     { name = "langchain-ollama", specifier = ">=1.0.0" },
     { name = "langchain-openai", specifier = ">=1.0.1" },
     { name = "langchain-tavily", specifier = ">=0.2.12" },
     { name = "langchain-teddynote", specifier = ">=0.5.4" },
-    { name = "langchain-text-splitters" },
+    { name = "langchain-text-splitters", specifier = ">=1.1.1" },
     { name = "langgraph", specifier = ">=1.0.1" },
     { name = "langgraph-checkpoint-postgres", specifier = ">=3.0.0" },
     { name = "langgraph-checkpoint-redis", specifier = ">=0.1.2" },
@@ -2548,7 +2548,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "seaborn", specifier = ">=0.13.2" },
-    { name = "sentence-transformers" },
+    { name = "sentence-transformers", specifier = ">=3.4.1" },
     { name = "yfinance", specifier = ">=0.2.66" },
 ]
 
@@ -5891,8 +5891,8 @@ name = "uvicorn"
 version = "0.42.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click" },
-    { name = "h11" },
+    { name = "click", marker = "sys_platform != 'emscripten'" },
+    { name = "h11", marker = "sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e3/ad/4a96c425be6fb67e0621e62d86c402b4a17ab2be7f7c055d9bd2f638b9e2/uvicorn-0.42.0.tar.gz", hash = "sha256:9b1f190ce15a2dd22e7758651d9b6d12df09a13d51ba5bf4fc33c383a48e1775", size = 85393, upload-time = "2026-03-16T06:19:50.077Z" }
 wheels = [
