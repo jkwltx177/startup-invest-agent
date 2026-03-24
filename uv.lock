@@ -2476,6 +2476,7 @@ wheels = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "langgraph-v1-tutorial"
 version = "0.1.0"
 source = { virtual = "." }
@@ -2494,6 +2495,7 @@ dependencies = [
     { name = "langchain-openai" },
     { name = "langchain-tavily" },
     { name = "langchain-teddynote" },
+    { name = "langchain-text-splitters" },
     { name = "langgraph" },
     { name = "langgraph-checkpoint-postgres" },
     { name = "langgraph-checkpoint-redis" },
@@ -2530,6 +2532,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=1.0.1" },
     { name = "langchain-tavily", specifier = ">=0.2.12" },
     { name = "langchain-teddynote", specifier = ">=0.5.4" },
+    { name = "langchain-text-splitters" },
     { name = "langgraph", specifier = ">=1.0.1" },
     { name = "langgraph-checkpoint-postgres", specifier = ">=3.0.0" },
     { name = "langgraph-checkpoint-redis", specifier = ">=0.1.2" },
@@ -2551,6 +2554,8 @@ requires-dist = [
 ]
 
 [[package]]
+=======
+>>>>>>> e2fb3e2 (Fix ModuleNotFoundError: Use langchain-text-splitters and update dependencies)
 name = "langsmith"
 version = "0.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -5474,6 +5479,84 @@ wheels = [
 ]
 
 [[package]]
+<<<<<<< HEAD
+=======
+name = "startup-invest-agent"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "deepagents" },
+    { name = "faiss-cpu" },
+    { name = "finance-datareader" },
+    { name = "jupyter" },
+    { name = "langchain" },
+    { name = "langchain-anthropic" },
+    { name = "langchain-community" },
+    { name = "langchain-experimental" },
+    { name = "langchain-huggingface" },
+    { name = "langchain-mcp-adapters" },
+    { name = "langchain-ollama" },
+    { name = "langchain-openai" },
+    { name = "langchain-tavily" },
+    { name = "langchain-teddynote" },
+    { name = "langgraph" },
+    { name = "langgraph-checkpoint-postgres" },
+    { name = "langgraph-checkpoint-redis" },
+    { name = "langgraph-supervisor" },
+    { name = "matplotlib" },
+    { name = "mcp" },
+    { name = "notebook" },
+    { name = "pandas" },
+    { name = "pdfplumber" },
+    { name = "psycopg", extra = ["binary", "pool"] },
+    { name = "psycopg2-binary" },
+    { name = "pypdf" },
+    { name = "python-docx" },
+    { name = "python-dotenv" },
+    { name = "scikit-learn" },
+    { name = "seaborn" },
+    { name = "sentence-transformers" },
+    { name = "yfinance" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "deepagents", specifier = ">=0.2.7" },
+    { name = "faiss-cpu" },
+    { name = "finance-datareader", specifier = ">=0.9.96" },
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "langchain", specifier = ">=1.0.2" },
+    { name = "langchain-anthropic", specifier = ">=1.0.0" },
+    { name = "langchain-community", specifier = ">=0.3.31" },
+    { name = "langchain-experimental", specifier = ">=0.3.4" },
+    { name = "langchain-huggingface" },
+    { name = "langchain-mcp-adapters", specifier = ">=0.1.12" },
+    { name = "langchain-ollama", specifier = ">=1.0.0" },
+    { name = "langchain-openai", specifier = ">=1.0.1" },
+    { name = "langchain-tavily", specifier = ">=0.2.12" },
+    { name = "langchain-teddynote", specifier = ">=0.5.4" },
+    { name = "langgraph", specifier = ">=1.0.1" },
+    { name = "langgraph-checkpoint-postgres", specifier = ">=3.0.0" },
+    { name = "langgraph-checkpoint-redis", specifier = ">=0.1.2" },
+    { name = "langgraph-supervisor", specifier = ">=0.0.31" },
+    { name = "matplotlib", specifier = ">=3.10.7" },
+    { name = "mcp", specifier = ">=1.21.0" },
+    { name = "notebook", specifier = ">=7.4.7" },
+    { name = "pandas", specifier = ">=2.3.3" },
+    { name = "pdfplumber", specifier = ">=0.11.8" },
+    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.12" },
+    { name = "psycopg2-binary" },
+    { name = "pypdf" },
+    { name = "python-docx", specifier = ">=1.2.0" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "scikit-learn", specifier = ">=1.7.2" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "sentence-transformers" },
+    { name = "yfinance", specifier = ">=0.2.66" },
+]
+
+[[package]]
+>>>>>>> e2fb3e2 (Fix ModuleNotFoundError: Use langchain-text-splitters and update dependencies)
 name = "sympy"
 version = "1.14.0"
 source = { registry = "https://pypi.org/simple" }
@@ -5889,8 +5972,8 @@ name = "uvicorn"
 version = "0.42.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click" },
-    { name = "h11" },
+    { name = "click", marker = "sys_platform != 'emscripten'" },
+    { name = "h11", marker = "sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e3/ad/4a96c425be6fb67e0621e62d86c402b4a17ab2be7f7c055d9bd2f638b9e2/uvicorn-0.42.0.tar.gz", hash = "sha256:9b1f190ce15a2dd22e7758651d9b6d12df09a13d51ba5bf4fc33c383a48e1775", size = 85393, upload-time = "2026-03-16T06:19:50.077Z" }
 wheels = [
