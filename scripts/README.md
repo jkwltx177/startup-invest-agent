@@ -12,6 +12,8 @@
 | **kure-v1** | nlpai-lab/KURE-v1, 한국어 최적화 |
 | **gte-qwen** | Alibaba-NLP/gte-Qwen2-1.5B-instruct, Qwen 계열 |
 
+-> **dragonkue/BGE-m3-ko**로 업그레이드
+
 ### 사용법
 
 ```bash
