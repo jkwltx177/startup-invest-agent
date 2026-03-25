@@ -2,6 +2,8 @@
 
 > LangGraph 기반 멀티에이전트 투자 심사 자동화 시스템
 
+(실제 산출물은 output의 invest_FuriosaAi로 시나리오는 성공시나리오.txt로 확인할 수 있다.)
+
 ---
 
 ## 프로젝트 개요
