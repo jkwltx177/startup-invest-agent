@@ -1,0 +1,234 @@
+============================================================
+  반도체 AI 스타트업 투자 평가 에이전트
+  (종료: 'exit' 또는 빈 입력)
+============================================================
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights: 100%|██████████████████████████████████████████████████████████████████████████████| 391/391 [00:00<00:00, 64509.99it/s]
+Loading weights: 100%|██████████████████████████████████████████████████████████████████████████████| 391/391 [00:00<00:00, 55156.66it/s]
+Loading weights: 100%|██████████████████████████████████████████████████████████████████████████████| 391/391 [00:00<00:00, 53576.38it/s]
+Loading weights: 100%|██████████████████████████████████████████████████████████████████████████████| 391/391 [00:00<00:00, 33938.43it/s]
+
+[질의] 분석할 반도체 AI 스타트업 / 도메인을 입력하세요
+> HBM 스타트업에  조사해줘          
+
+[파이프라인 시작]
+질의: HBM 스 조사해줘
+
+◆ [오케스트레이터]
+◆ [슈퍼바이저] (이터레이션: 0)
+◆ [발굴 에이전트]
+  탐색 시도 1/3
+
+============================================================
+[HITL CP-2]
+총 6개 반도체 AI 스타트업 후보가 발굴되었습니다:
+
+  1. FuriosaAI
+     도메인: AI chip | 단계: Series A
+     FuriosaAI is a fabless semiconductor startup that focuses on developing AI chips...
+  2. Sapia
+     도메인: AI chip | 단계: Seed
+     Sapia is a semiconductor startup that is working on AI chips designed for high-p...
+  3. SambaNova Systems
+     도메인: AI chip | 단계: Series B
+     SambaNova Systems develops AI hardware and software solutions, focusing on creat...
+  4. Rebellion
+     도메인: AI chip | 단계: Series A
+     Rebellion is a semiconductor startup that specializes in AI chips and is collabo...
+  5. MatX
+     도메인: AI chip | 단계: Seed
+     MatX is focused on developing AI chips that combine low-latency SRAM designs wit...
+  6. Cadence
+     도메인: EDA | 단계: Series C
+     Cadence is an EDA company that is integrating AI into its design tools to optimi...
+
+첫 번째로 심층 분석할 후보를 선택하세요.
+(나머지는 이 후보 평가 후 순차적으로 진행됩니다)
+
+선택지:
+  1. FuriosaAI
+  2. Sapia
+  3. SambaNova Systems
+  4. Rebellion
+  5. MatX
+  6. Cadence
+  7. 다시 탐색
+
+응답 (번호 또는 직접 입력): 2
+→ 선택: Sapia
+◆ [발굴 에이전트]
+  탐색 시도 1/3
+[Discovery] CP-2: 선택 → Sapia
+◆ [슈퍼바이저] (이터레이션: 1)
+◆ [미니 슈퍼바이저]
+  전체 분석 시작 (1개 후보)
+  Mini-Supervisor: Full fan-out for 1 candidates
+◆ [기술 요약 에이전트]
+◆ [시장 분석 에이전트]
+◆ [경쟁사 분석 에이전트]
+  캐시 미스 — 웹 검색 보완
+  최신 시장 데이터 웹 검색 중
+  경쟁사 데이터 웹 검색 중
+◆ [슈퍼바이저] (이터레이션: 2)
+◆ [판정 에이전트]
+  판정 결과: 통과=False, 미충족=['Coverage'], 전략=re_route
+◆ [슈퍼바이저] (이터레이션: 3)
+  판정 재시도 요청: ['tech_summary', 'market_eval']
+◆ [미니 슈퍼바이저]
+  전체 분석 시작 (1개 후보)
+  Mini-Supervisor: Targeted retry for ['tech_summary', 'market_eval']
+◆ [기술 요약 에이전트]
+◆ [시장 분석 에이전트]
+  최신 시장 데이터 웹 검색 중
+  캐시 미스 — 웹 검색 보완
+◆ [슈퍼바이저] (이터레이션: 4)
+◆ [판정 에이전트]
+  판정 결과: 통과=False, 미충족=['Coverage'], 전략=re_route
+◆ [슈퍼바이저] (이터레이션: 5)
+  판정 재시도 요청: ['competitor']
+◆ [미니 슈퍼바이저]
+  전체 분석 시작 (1개 후보)
+  Mini-Supervisor: Targeted retry for ['competitor']
+◆ [경쟁사 분석 에이전트]
+  경쟁사 데이터 웹 검색 중
+◆ [슈퍼바이저] (이터레이션: 6)
+◆ [판정 에이전트]
+  판정 결과: 통과=False, 미충족=['Coverage'], 전략=re_route
+
+============================================================
+[HITL CP-3]
+Judge 검증이 2회 시도 후에도 통과하지 못했습니다.
+
+실패 기준: Coverage
+평가: 기술 분석과 시장 분석의 개수가 후보 스타트업 수에 맞지 않아 Coverage 기준을 통과하지 못했습니다.
+
+어떻게 진행할까요?
+
+선택지:
+  1. 강제 통과 후 Decision 진행
+  2. 분석 처음부터 재시작
+  3. 현재 데이터로 보고서 생성
+
+응답 (번호 또는 직접 입력): 2
+→ 선택: 분석 처음부터 재시작
+◆ [판정 에이전트]
+  판정 결과: 통과=False, 미충족=['Coverage'], 전략=re_route
+◆ [투자 결정 에이전트]
+◆ [슈퍼바이저] (이터레이션: 7)
+  보류 처리 → 다음 후보: FuriosaAI
+◆ [미니 슈퍼바이저]
+  전체 분석 시작 (1개 후보)
+  Mini-Supervisor: Full fan-out for 1 candidates
+◆ [기술 요약 에이전트]
+◆ [시장 분석 에이전트]
+◆ [경쟁사 분석 에이전트]
+  경쟁사 데이터 웹 검색 중
+  최신 시장 데이터 웹 검색 중
+  캐시 미스 — 웹 검색 보완
+◆ [슈퍼바이저] (이터레이션: 8)
+◆ [판정 에이전트]
+  판정 결과: 통과=True, 미충족=[], 전략=re_generate
+◆ [투자 결정 에이전트]
+
+============================================================
+[HITL CP-3.5]
+══════════════════════════════
+  에이전트 분석 결과 확인
+══════════════════════════════
+
+【기술 분석】
+  • FuriosaAI: 기존의 대형 기술 기업과의 차별화된 독립적인 로드맵 구축
+    강점: 고성능 AI 칩 설계, 딥러닝에 최적화된 아키텍처
+
+【시장 분석】
+  • FuriosaAI: $102 billion by 2027, CAGR CAGR of approximately 30%
+    High - FuriosaAI has demonstrated its viability in enterprise settings and has s
+
+【경쟁사 분석】
+  • FuriosaAI vs Nvidia: FuriosaAI는 에너지 효율성과 비용 효율성을 강조하며, Nvidia는 성능과 개발자 지원에서 강점을 보임. FuriosaAI는 특정 AI 
+  • FuriosaAI vs AMD: FuriosaAI는 특정 AI 작업에 최적화된 칩을 제공하는 반면, AMD는 범용 GPU를 통해 다양한 애플리케이션을 지원. FuriosaAI는
+
+위 분석 데이터를 확인하셨습니까?
+투자 스코어링을 진행하려면 '투자 평가 진행'을 선택하세요.
+
+선택지:
+  1. 투자 평가 진행
+  2. 분석 재실행
+
+응답 (번호 또는 직접 입력): 1
+→ 선택: 투자 평가 진행
+◆ [투자 결정 에이전트]
+
+============================================================
+[HITL CP-4]
+══════════════════════════════
+  투자 분석 데이터 요약
+══════════════════════════════
+
+【스타트업 정보】
+  ▶ FuriosaAI | AI chip | Series A
+    FuriosaAI is a fabless semiconductor startup that develops AI chips optimized for deep learning applications, focusing o...
+
+【기술 분석】
+  • FuriosaAI: 기존의 대형 기술 기업과의 차별화된 독립적인 로드맵 구축
+    강점: 고성능 AI 칩 설계, 딥러닝에 최적화된 아키텍처
+
+【시장 분석】
+  • FuriosaAI: $102 billion by 2027, CAGR CAGR of approximately 30%
+    High - FuriosaAI has demonstrated its viability in enterprise settings and has s
+
+【경쟁사 분석】
+  • FuriosaAI vs Nvidia: FuriosaAI는 에너지 효율성과 비용 효율성을 강조하며, Nvidia는 성능과 개발자 지원에서 강점을 보임. FuriosaAI는 특정 AI 
+  • FuriosaAI vs AMD: FuriosaAI는 특정 AI 작업에 최적화된 칩을 제공하는 반면, AMD는 범용 GPU를 통해 다양한 애플리케이션을 지원. FuriosaAI는
+
+【투자 스코어카드】
+  • FuriosaAI: 84점 [INVEST]
+    FuriosaAI는 AI 칩 설계에서 뛰어난 성과를 보이고 있으며, 창업자는 반도체 및 AI 분야에서 10년 이상의 경험을 가지고 있습니다. 시장성은 TAM이 $102 billio...
+    - 창업자: 4
+    - 시장성: 5
+    - 제품/기술: 5
+    - 경쟁우위: 4
+    - 실적: 5
+    - 투자조건: 4
+    - 기술차별성: 4
+    - 제품단계: 5
+    - 데이터접근성: 4
+    - 생태계: 3
+    - 트렌드적합성: 5
+    - 기술영역: 4
+    - 고객산업: 4
+    - 성장성: 4
+
+종합 의견: INVEST
+
+위 데이터를 검토하셨습니다. 보고서를 생성할까요?
+
+선택지:
+  1. 예, 보고서 생성
+  2. 아니오, 분석 재검토
+
+응답 (번호 또는 직접 입력): 1
+→ 선택: 예, 보고서 생성
+◆ [투자 결정 에이전트]
+◆ [보고서 생성 에이전트]
+  PDF 저장 완료: ./output/invest_FuriosaAI_20260325_085937.pdf
+  보고서 생성 완료.
+
+============================================================
+  파이프라인 완료
+============================================================
+
+[투자 스코어카드 요약]
+✅ FuriosaAI: 84점 [INVEST]
+   근거: FuriosaAI는 AI 칩 설계에서 뛰어난 기술력을 보유하고 있으며, 창업자는 반도체 및 AI 분야에서 10년 이상의 경험을 가지고 있습니다. 시장성 측면에서 TAM이 1020억 달러로 매우 높아 5점을 받았습니다...
+
+[최종 투자 결정] INVEST
+[선정 스타트업] FuriosaAI
+
+[PDF 보고서] ./output/invest_FuriosaAI_20260325_085937.pdf
+
+============================================================
+다음 질의를 입력하거나 'exit'를 입력해 종료하세요.
+
+[질의] 분석할 반도체 AI 스타트업 / 도메인을 입력하세요
+> 

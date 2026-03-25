@@ -1,0 +1,69 @@
+flowchart TD
+
+    USER["User Query"]
+
+    OA["Orchestrator
+    (Direct vs Pipeline)"]
+
+    SUP["Supervisor
+    - Routing
+    - Query Rewrite"]
+
+    DISC["Discovery
+    - Web Search
+    - FAISS Filter"]
+
+    CP2["CP-2 HITL
+    Startup Selection"]
+
+    MINI["Mini Supervisor
+    (Pass-through)"]
+
+    TECH["Tech Summary"]
+    MARKET["Market Eval"]
+    COMP["Competitor"]
+
+    JUDGE["Judge Loop
+    (5 Criteria)"]
+
+    REWORK["Rework
+    (Max 3 Iterations)"]
+
+    DEC["Decision
+    (Scorecard + CP-4)"]
+
+    REPORT["Report Generation
+    (Parallel Sections + Reflection)"]
+
+    CP5["CP-5 HITL"]
+
+    END["Final Output"]
+
+    %% Flow
+    USER --> OA
+    OA -->|pipeline| SUP
+    OA -->|direct| END
+
+    SUP -->|no candidates| DISC
+    DISC --> CP2
+    CP2 --> SUP
+
+    SUP -->|analysis needed| MINI
+
+    MINI --> TECH
+    MINI --> MARKET
+    MINI --> COMP
+
+    TECH --> SUP
+    MARKET --> SUP
+    COMP --> SUP
+
+    SUP -->|analysis complete| JUDGE
+
+    JUDGE -->|fail| REWORK
+    REWORK --> SUP
+
+    JUDGE -->|pass| DEC
+    DEC --> REPORT
+    REPORT --> CP5
+    CP5 --> END
