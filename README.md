@@ -5,17 +5,9 @@
 ## Features
 
 - **pdfplumber 기반 정밀 전처리**: 기술 문서의 레이아웃을 보존하며 페이지, 파일명, 수정일자 등 메타데이터 자동 추출
-- **Adaptive Loop Orchestration**: Supervisor가 데이터 품질(Judge)에 따라 탐색과 분석 단계를 동적으로 조절
+- **Deterministic Orchestration**: Supervisor가 후보 유무·순번에 따라 발굴과 순차 심사를 규칙 기반으로 라우팅 (LLM은 척도 추출, 판정은 결정론적 Scorecard/Gate)
 - **Branching & Multi-hop Retrieval**: 질의 확장 및 다단계 검색을 통한 기술적 해자(Moat) 및 시장 규모(TAM/SAM/SOM) 정밀 분석
 - **Reflection 기반 보고서 생성**: 섹션별 순차 생성 및 자가 검증 루프를 통한 할루시네이션(환각) 최소화
-
-## Evaluation Metrics
-
-| Metric | Score | Note |
-| :--- | :--- | :--- |
-| **Embedding Recall@k** | **0.85** | BGE-m3-ko 기반 한국어 임베딩 벤치마크 (AutoRAG 기준) |
-| **Hit Rate@10** | **0.90** | 반도체 도메인 특화 문서 검색 정확도 |
-| **MRR (Mean Reciprocal Rank)** | **0.78** | 최상단 검색 결과의 정답 관련성 |
 
 ## Architecture
 
@@ -62,15 +54,12 @@
 ## Supervisor
 전체 파이프라인의 라우팅 컨트롤러.
 
-`judge_quality()`로 후보·기술분석·시장분석의 커버리지 점수(0~1.0)를 산출하고, GPT-4o-mini에게 현재 상태를 전달하여 `next_agent`를 결정합니다.
+후보 유무와 평가 순번(`candidate_eval_index`)에 따라 다음 단계를 결정하는 **규칙 기반 라우터**입니다. LLM 호출 없이 결정론적으로 동작해 라우팅 재현성을 보장합니다.
 
 ```
-coverage_score:
-  candidates 존재      → +0.3
-  tech_summaries 충분  → +0.3
-  market_analyses 충분 → +0.4
-  ────────────────────────────
-  1.0 달성 시 'decision'으로 라우팅
+후보 없음                → discovery
+Rank i ≤ N (평가 진행 중) → tech_summary → market → competitor → decision
+전원 보류               → report_gen (보류 종합 보고서)
 ```
 
 ---
@@ -79,11 +68,11 @@ coverage_score:
 
 ① 질의를 반도체 Value Chain 기준 Sub-query로 분해 (Query Expansion)
 ② 각 Sub-query 병렬 검색 → 결과 Fusion → 중복 제거 → Top-K 선정
-③ Judge: 후보 수, 반도체 관련성, 스타트업 여부, 트렌드 점수 평가
-④ 미달 시 Query Rewrite + 도메인 필터 조정 후 재탐색 (최대 3회)
-⑤ CP-2 HITL: 통과 후 사람에게 후보 확정 요청
+③ CP-2 HITL: 사람에게 후보 확정 요청
 
-### Judge 기준
+> 설계 단계에서 검토했던 Judge 기반 재탐색 루프(후보 수·도메인 적합성 평가 → Query Rewrite, 최대 3회)는 과제 기간 내 미구현 — 로드맵으로 남겨둡니다.
+
+### Judge 설계 기준 (로드맵)
 
 ```
 - 후보 수가 너무 적은가
@@ -103,11 +92,11 @@ coverage_score:
 
 ## TechSummaryAgent & CompetitorAgent
 
-**포인트: Memory-first Retrieval + Post-Retrieval Re-ranking + Self-Evaluation Loop**
+**포인트: Memory-first Retrieval + 웹 검색 보완 + LLM 품질 체크**
 
 - GraphState에 저장된 요약 캐시를 우선 조회하여 기존 분석 결과 재사용
 - 정보 부족 시에만 웹 검색을 추가로 수행하여 최신 데이터 보완
-- Self-Evaluation Loop로 기술 설명의 구체성·출처 일관성·핵심 지표 포함 여부를 검증하고 필요 시 재검색 또는 재생성 수행
+- LLM 품질 체크(구조화 출력)로 기술 설명의 구체성·출처 일관성·핵심 지표 포함 여부를 검증하고, 미달 시 경고를 남깁니다 (자동 재검색·재생성 루프는 로드맵)
 
 ---
 
