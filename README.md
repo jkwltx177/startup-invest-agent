@@ -6,8 +6,19 @@
 
 - **pdfplumber 기반 정밀 전처리**: 기술 문서의 레이아웃을 보존하며 페이지, 파일명, 수정일자 등 메타데이터 자동 추출
 - **Deterministic Orchestration**: Supervisor가 후보 유무·순번에 따라 발굴과 순차 심사를 규칙 기반으로 라우팅 (LLM은 척도 추출, 판정은 결정론적 Scorecard/Gate)
+- **v2 고도화 ([`version2`](../../tree/version2) 브랜치)**: Judge 기반 재탐색·쿼리 재작성(ToolRouter), 보류 풀 소진 시 후보 재탐색, 보고서 섹션 단위 재생성 루프, 서브바이저·캐시·HITL 확장 — main 통합 예정
 - **Branching & Multi-hop Retrieval**: 질의 확장 및 다단계 검색을 통한 기술적 해자(Moat) 및 시장 규모(TAM/SAM/SOM) 정밀 분석
 - **Reflection 기반 보고서 생성**: 섹션별 순차 생성 및 자가 검증 루프를 통한 할루시네이션(환각) 최소화
+
+## Evaluation Metrics
+
+| Metric | Score | Note |
+| :--- | :--- | :--- |
+| **Embedding Recall@k** | 0.85 | BGE-m3-ko 기반 한국어 임베딩 (AutoRAG 기준) |
+| **Hit Rate@10** | 0.90 | 반도체 도메인 특화 문서 검색 정확도 |
+| **MRR (Mean Reciprocal Rank)** | 0.78 | 최상단 검색 결과의 정답 관련성 |
+
+> 측정 당시의 AutoRAG 설정·재현 스크립트가 저장소에 아직 포함되어 있지 않습니다. 재현 자료를 정리해 추가할 예정입니다.
 
 ## Architecture
 
@@ -70,9 +81,9 @@ Rank i ≤ N (평가 진행 중) → tech_summary → market → competitor → 
 ② 각 Sub-query 병렬 검색 → 결과 Fusion → 중복 제거 → Top-K 선정
 ③ CP-2 HITL: 사람에게 후보 확정 요청
 
-> 설계 단계에서 검토했던 Judge 기반 재탐색 루프(후보 수·도메인 적합성 평가 → Query Rewrite, 최대 3회)는 과제 기간 내 미구현 — 로드맵으로 남겨둡니다.
+> Judge 기반 재탐색 루프(후보 평가 → Query Rewrite → 재탐색)는 [`version2`](../../tree/version2) 브랜치에 구현되어 있으며(재탐색 CP-2, ToolRouter.rewrite_query, 보류 풀 소진 시 재발굴), main 통합을 앞두고 있습니다.
 
-### Judge 설계 기준 (로드맵)
+### Judge 기준 (v2 구현)
 
 ```
 - 후보 수가 너무 적은가
@@ -96,7 +107,7 @@ Rank i ≤ N (평가 진행 중) → tech_summary → market → competitor → 
 
 - GraphState에 저장된 요약 캐시를 우선 조회하여 기존 분석 결과 재사용
 - 정보 부족 시에만 웹 검색을 추가로 수행하여 최신 데이터 보완
-- LLM 품질 체크(구조화 출력)로 기술 설명의 구체성·출처 일관성·핵심 지표 포함 여부를 검증하고, 미달 시 경고를 남깁니다 (자동 재검색·재생성 루프는 로드맵)
+- LLM 품질 체크(구조화 출력)로 기술 설명의 구체성·출처 일관성·핵심 지표 포함 여부를 검증합니다 — main은 미달 시 경고까지, 섹션 단위 자동 재생성 루프는 `version2` 브랜치에 구현
 
 ---
 
